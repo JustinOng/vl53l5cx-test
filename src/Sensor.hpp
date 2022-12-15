@@ -8,10 +8,12 @@ namespace Sensor {
 constexpr int IMAGE_WIDTH = 8;
 SparkFun_VL53L5CX imager;
 
+const char* TAG = "Sensor";
+
 void initialize() {
-  Serial.println(F("Initializing sensor board. This can take up to 10s. Please wait."));
+  ESP_LOGI(TAG, "Initializing sensor board. This can take up to 10s. Please wait.");
   if (!imager.begin()) {
-    Serial.println(F("Sensor not found - check your wiring. Freezing"));
+    ESP_LOGE(TAG, "Sensor not found - check your wiring. Freezing");
     while (1)
       ;
   }
@@ -23,27 +25,27 @@ void initialize() {
     SF_VL53L5CX_RANGING_MODE mode = imager.getRangingMode();
     switch (mode) {
       case SF_VL53L5CX_RANGING_MODE::AUTONOMOUS:
-        Serial.println(F("Ranging mode set to autonomous."));
+        ESP_LOGI(TAG, "Ranging mode set to autonomous.");
         break;
 
       case SF_VL53L5CX_RANGING_MODE::CONTINUOUS:
-        Serial.println(F("Ranging mode set to continuous."));
+        ESP_LOGI(TAG, "Ranging mode set to continuous.");
         break;
 
       default:
-        Serial.println(F("Error recovering ranging mode."));
+        ESP_LOGI(TAG, "Error recovering ranging mode.");
         break;
     }
   } else {
-    Serial.println(F("Cannot set ranging mode requested. Freezing..."));
+    ESP_LOGE(TAG, "Cannot set ranging mode requested. Freezing...");
     while (1)
       ;
   }
 
   if (imager.startRanging()) {
-    Serial.println(F("Ranging started"));
+    ESP_LOGI(TAG, "Ranging started");
   } else {
-    Serial.println(F("Cannot start ranging. Freezing..."));
+    ESP_LOGW(TAG, "Cannot start ranging. Freezing...");
     while (1)
       ;
   }
@@ -59,9 +61,6 @@ int8_t read() {
 
   if (imager.getRangingData(&measurementData))  // Read distance data into array
   {
-    Serial.print(F("Took "));
-    Serial.print(millis() - start);
-    Serial.println(F("ms to read"));
     // The ST library returns the data transposed from zone mapping shown in datasheet
     // Pretty-print data with increasing y, decreasing x to reflect reality
     for (int y = 0; y <= IMAGE_WIDTH * (IMAGE_WIDTH - 1); y += IMAGE_WIDTH) {
