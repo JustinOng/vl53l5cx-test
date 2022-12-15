@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <style>
+      #display-table td {
+        width: 64px;
+        height: 64px;
+        text-align: center;
+      }
+    </style>
+    <script>
+      async function render() {
+        const sensor_url = (localStorage.getItem("host") || "") + "/sensor";
+        const data = await (await fetch(sensor_url)).json();
+        const cells = document.querySelectorAll("#display-table td");
+        for (const [i, zone] of data.entries()) {
+          const [target_status, distance] = zone;
+          cells[i].innerHTML = `${distance}<br/>(${target_status})`;
+
+          const MAX_DISTANCE = 3000;
+          const c = (distance / MAX_DISTANCE) * 255;
+
+          cells[i].style.backgroundColor = `rgb(${c}, ${c}, ${c})`;
+        }
+      }
+
+      window.onload = () => {
+        document.querySelector("#display-table tbody").innerHTML +=
+          "<tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>".repeat(
+            8
+          );
+      };
+
+      setInterval(render, 200);
+    </script>
+  </head>
+  <body>
+    <table id="display-table">
+      <tbody></tbody>
+    </table>
+  </body>
+</html>

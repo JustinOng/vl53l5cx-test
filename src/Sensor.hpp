@@ -8,7 +8,7 @@ namespace Sensor {
 constexpr int IMAGE_WIDTH = 8;
 SparkFun_VL53L5CX imager;
 
-const char* TAG = "Sensor";
+const char *TAG = "Sensor";
 
 void initialize() {
   ESP_LOGI(TAG, "Initializing sensor board. This can take up to 10s. Please wait.");
@@ -19,6 +19,7 @@ void initialize() {
   }
 
   imager.setResolution(IMAGE_WIDTH * IMAGE_WIDTH);
+  imager.setRangingFrequency(5);
 
   // Set the ranging mode
   if (imager.setRangingMode(SF_VL53L5CX_RANGING_MODE::CONTINUOUS)) {
@@ -51,32 +52,29 @@ void initialize() {
   }
 }
 
-int8_t read() {
+int8_t read(uint8_t target_status[], int16_t distances[]) {
   VL53L5CX_ResultsData measurementData;
   if (!imager.isDataReady()) {
     return 0;
   }
 
-  uint32_t start = millis();
-
+  uint8_t i = 0;
   if (imager.getRangingData(&measurementData))  // Read distance data into array
   {
     // The ST library returns the data transposed from zone mapping shown in datasheet
     // Pretty-print data with increasing y, decreasing x to reflect reality
     for (int y = 0; y <= IMAGE_WIDTH * (IMAGE_WIDTH - 1); y += IMAGE_WIDTH) {
       for (int x = IMAGE_WIDTH - 1; x >= 0; x--) {
-        Serial.print("\t");
-        Serial.print(measurementData.distance_mm[x + y]);
-        Serial.print(" (");
-        Serial.print(measurementData.target_status[x + y]);
-        Serial.print(")");
+        target_status[i] = measurementData.target_status[x + y];
+        distances[i] = measurementData.distance_mm[x + y];
+        i++;
       }
-      Serial.println();
     }
-    Serial.println();
+
+    return 0;
   }
 
-  return 0;
+  return 1;
 }
 
 }  // namespace Sensor
